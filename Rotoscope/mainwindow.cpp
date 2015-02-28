@@ -93,7 +93,9 @@ void MainWindow::createEditionView(){
     right->setMinimumWidth(20);
     connect(right, SIGNAL(pressed()), this->picturesArea, SLOT(nextPicture()));
     panel->addWidget(left);
-    panel->addWidget(this->drawingArea);
+    QHBoxLayout * layout = new QHBoxLayout;
+    layout->addWidget(this->drawingArea);
+    panel->addLayout(layout);
     panel->addWidget(right);
     upArea->setLayout(panel);
 }

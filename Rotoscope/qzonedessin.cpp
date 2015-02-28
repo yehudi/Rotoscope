@@ -38,6 +38,7 @@ void QZoneDessin::loadImage(int number){
          this->drawed_picture = new QImage(this->paths[this->current_picture]+".png");
          this->m_image = new QImage(temp.scaled(640,480,Qt::KeepAspectRatio));
          this->update();
+         this->setFixedSize(this->m_image->size());
      }
 }
 
