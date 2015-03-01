@@ -12,6 +12,7 @@ QZoneDessin::QZoneDessin(QWidget * parent) : QWidget(parent){
     this->current_picture = 0;
     this->afficherDecor = true;
     this->nombrePelures = 1;
+    this->frequenceDessin = 1;
     this->drawed_picture = NULL;
     m_position = NULL;
     erase =false;
@@ -79,9 +80,11 @@ void QZoneDessin::refresh()
 
     p.setOpacity(0);
     for(int i=nbre; i>0; --i){
-        p.setOpacity(p.opacity() + opacity);
-        QImage img(this->paths[this->current_picture-i]+".png");
-        p.drawImage(0,0,img);
+        if(this->current_picture-i*this->frequenceDessin >= 0){
+            p.setOpacity(p.opacity() + opacity);
+            QImage img(this->paths[this->current_picture-i*this->frequenceDessin]+".png");
+            p.drawImage(0,0,img);
+        }
     }
     p.setOpacity(1);
     p.drawImage(0,0,*this->drawed_picture);

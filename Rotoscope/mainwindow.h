@@ -23,6 +23,7 @@ private:
     QMenu *fileMenu;
     QMenu *editMenu;
     QMenu *viewMenu;
+    QMenu *optionMenu;
     QMenu *helpMenu;
 
     QToolBar *editToolBar;
@@ -31,6 +32,7 @@ private:
 
     QWidget * homeView;
     QWidget * editionView;
+    QWidget * loadingView;
 
     QBrush * myBruch;
     QPushButton * colorPickerButt;
@@ -49,7 +51,18 @@ private:
     QAction *playVideoAct;
     QAction *pauseVideoAct;
     QAction *stopVideoAct;
+    QAction *clearPageAct;
 
+    QActionGroup *changeOgnionFrequencyActGrp;
+    QAction *pelure1Act;
+    QAction *pelure2Act;
+    QAction *pelure3Act;
+    QAction *pelure4Act;
+
+    QActionGroup *drawingFrequencyActGrp;
+    QAction *drawingFrequency1Act;
+    QAction *drawingFrequency2Act;
+    QAction *drawingFrequency3Act;
 
     QActionGroup *toolsActGrp;
 
@@ -58,6 +71,10 @@ private:
     QAction *toggleBackgroundAct;
     QAction *toggleOnionAct;
     QAction *undoAct;
+
+    QLabel * loadingLabel;
+    QLabel * loadingLabelText;
+    QMovie * loadingGif;
 
 public slots:
     void newProject();
@@ -76,15 +93,27 @@ public slots:
     void playVideo();
     void pauseVideo();
     void stopVideo();
+    void clearPage();
+    void changeOgnionFrequency1();
+    void changeOgnionFrequency2();
+    void changeOgnionFrequency3();
+    void changeOgnionFrequency4();
+
+
+    void drawingFrequency1();
+    void drawingFrequency2();
+    void drawingFrequency3();
 
 public:
     explicit MainWindow(QWidget *parent = 0);
     void showHomeView();
     void showEditionView();
+    void showLoadingView(QString);
 
     void createViews();
     void createHomeView();
     void createEditionView();
+    void createLoadingView();
 
     void createToolbars();
     void createMenus();
@@ -97,6 +126,8 @@ public:
 
 private:
     Ui::MainWindow *ui;
+
+    void enableEditionActions(bool);
 };
 
 #endif // MAINWINDOW_H

@@ -13,19 +13,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow){
     this->project_is_temporary = true;
     ui->setupUi(this);
-    this->showMaximized();
     this->createViews();
+    this->enableEditionActions(false);
     this->showHomeView();
-
-    this->saveProjectAct->setDisabled(true);
-    this->saveAsProjectAct->setDisabled(true);
-    this->playVideoAct->setDisabled(true);
-    this->pauseVideoAct->setDisabled(true);
-    this->stopVideoAct->setDisabled(true);
-    this->toolsActGrp->setDisabled(true);
-    this->toggleBackgroundAct->setDisabled(true);
-    this->toggleOnionAct->setDisabled(true);
-    this->undoAct->setDisabled(true);
+    //this->showLoadingView("Loading");
+    //this->showEditionView();
+    //this->showHomeView();
+    //this->showLoadingView("Loading");
+    this->showMaximized();
 
 }
 
@@ -42,6 +37,7 @@ void MainWindow::createViews(){
     this->createMenus();
     this->createHomeView();
     this->createEditionView();
+    this->createLoadingView();
 }
 
 void MainWindow::createHomeView(){
@@ -120,26 +116,77 @@ void MainWindow::createEditionView(){
     upArea->setLayout(panel);
 }
 
+void MainWindow::createLoadingView(){
+    this->loadingView = new QWidget(this);
+    this->loadingView->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+    QVBoxLayout * layout = new QVBoxLayout();
+    this->loadingView->setLayout(layout);
+    layout->setAlignment(Qt::AlignCenter);
+    this->loadingLabel = new QLabel();
+    this->loadingLabel->setAlignment(Qt::AlignCenter);
+    this->loadingLabelText = new QLabel;
+    this->loadingGif = new QMovie("../Resources/loading.gif");
+    loadingLabel->setMovie(this->loadingGif);
+    layout->addWidget(this->loadingLabel);
+    layout->addWidget(this->loadingLabelText);
+
+    QFont font = this->font();
+    font.setPointSize(16);
+    this->loadingLabelText->setMargin(20);
+    this->loadingLabelText->setFont(font);
+    this->loadingLabelText->setAlignment(Qt::AlignCenter);
+}
+
 void MainWindow::showHomeView(){
+    //this->loadingGif->stop();
+    this->homeView->show();
+    if (this->centralWidget())
+        this->centralWidget()->setParent(0);
+    this->setCentralWidget(this->homeView);
     this->ui->mainToolBar->hide();
     this->editionView->hide();
+    this->loadingView->hide();
     QList<QToolBar *> toolbars = this->findChildren<QToolBar *>();
     foreach(QToolBar * tl, toolbars){
         tl->hide();
     }
+}
 
-    this->setCentralWidget(this->homeView);
+void MainWindow::showLoadingView(QString message){
+    qDebug()<<"Showing loading view";
+    this->loadingView->show();
+    this->loadingLabelText->setText(message);
+    this->loadingGif->start();
+
+    if (this->centralWidget())
+        this->centralWidget()->setParent(0);
+    this->setCentralWidget(this->loadingView);
+
+    this->ui->mainToolBar->hide();
+    this->editionView->hide();
+    this->homeView->hide();
+    QList<QToolBar *> toolbars = this->findChildren<QToolBar *>();
+    foreach(QToolBar * tl, toolbars){
+        tl->hide();
+    }
 }
 
 void MainWindow::showEditionView(){
+    this->loadingGif->stop();
+
+    this->editionView->show();
+
+    if (this->centralWidget())
+        this->centralWidget()->setParent(0);
+    this->setCentralWidget(this->editionView);
+
     this->ui->mainToolBar->show();
     this->homeView->hide();
+    this->loadingView->hide();
     QList<QToolBar *> toolbars = this->findChildren<QToolBar *>();
     foreach(QToolBar * tl, toolbars){
         tl->show();
     }
-    this->setCentralWidget(this->editionView);
-    this->editionView->show();
 }
 
 /*
@@ -211,13 +258,25 @@ void MainWindow::createMenus(){
     this->editMenu->addSeparator();
     this->editMenu->addAction(this->toggleOnionAct);
     this->editMenu->addAction(this->toggleBackgroundAct);
+    this->editMenu->addAction(this->clearPageAct);
 
     this->viewMenu = this->menuBar()->addMenu(tr("&Previsualisation"));
     this->viewMenu->addAction(this->playVideoAct);
     this->viewMenu->addAction(this->pauseVideoAct);
     this->viewMenu->addAction(this->stopVideoAct);
-}
 
+    this->optionMenu = this->menuBar()->addMenu(tr("&Options"));
+    QMenu * menuPelures = this->optionMenu->addMenu(tr("&nombre de pelures"));
+    menuPelures->addAction(this->pelure1Act);
+    menuPelures->addAction(this->pelure2Act);
+    menuPelures->addAction(this->pelure3Act);
+    menuPelures->addAction(this->pelure4Act);
+
+    QMenu * menuDrawings = this->optionMenu->addMenu(tr("&Frequence dessin"));
+    menuDrawings->addAction(this->drawingFrequency1Act);
+    menuDrawings->addAction(this->drawingFrequency2Act);
+    menuDrawings->addAction(this->drawingFrequency3Act);
+}
 void MainWindow::createActions(){
 
     /*
@@ -262,23 +321,60 @@ void MainWindow::createActions(){
     this->selectEraserAct->setCheckable(true);
     connect(this->selectEraserAct, SIGNAL(triggered()), this, SLOT(selectEraser()));
 
-    this->playVideoAct = new QAction(QIcon("../Resources/MyIcons/png/arrow16.png"),tr("&play"), toolsActGrp);
+    this->playVideoAct = new QAction(QIcon("../Resources/MyIcons/png/arrow16.png"),tr("&play"), this);
     this->playVideoAct->setStatusTip("Lancer la video");
     connect(this->playVideoAct, SIGNAL(triggered()), this, SLOT(playVideo()));
 
-    this->pauseVideoAct = new QAction(QIcon("../Resources/MyIcons/png/pause52.png"),tr("&pause"), toolsActGrp);
+    this->pauseVideoAct = new QAction(QIcon("../Resources/MyIcons/png/pause52.png"),tr("&pause"), this);
     this->pauseVideoAct->setStatusTip("Mettre la video en pause");
     connect(this->pauseVideoAct, SIGNAL(triggered()), this, SLOT(pauseVideo()));
 
 
-    this->stopVideoAct = new QAction(QIcon("../Resources/MyIcons/png/stop4.png"),tr("&stop"), toolsActGrp);
+    this->stopVideoAct = new QAction(QIcon("../Resources/MyIcons/png/stop4.png"),tr("&stop"), this);
     this->stopVideoAct->setStatusTip("Arreter la video");
     connect(this->stopVideoAct, SIGNAL(triggered()), this, SLOT(stopVideo()));
 
-    this->undoAct = new QAction(tr("&annuler"), toolsActGrp);
+    this->undoAct = new QAction(tr("&annuler"), this);
     this->undoAct->setStatusTip("annuler dernière opération");
     connect(this->undoAct, SIGNAL(triggered()), this, SLOT(undo()));
 
+    this->clearPageAct = new QAction(tr("&vider la page"), this);
+    this->clearPageAct->setStatusTip("Vider la page courrante");
+    connect(this->clearPageAct, SIGNAL(triggered()), this, SLOT(clearPage()));
+
+    this->changeOgnionFrequencyActGrp = new QActionGroup(this);
+    this->pelure1Act = new QAction(tr("1 pelure"), this->changeOgnionFrequencyActGrp);
+    this->pelure1Act->setCheckable(true);
+    this->pelure1Act->setStatusTip("Changer nombre de pelures");
+    connect(this->pelure1Act, SIGNAL(triggered()), this, SLOT(changeOgnionFrequency1()));
+    this->pelure2Act = new QAction(tr("3 pelure"), this->changeOgnionFrequencyActGrp);
+    this->pelure2Act->setCheckable(true);
+    this->pelure2Act->setStatusTip("Changer nombre de pelures");
+    connect(this->pelure2Act, SIGNAL(triggered()), this, SLOT(changeOgnionFrequency2()));
+    this->pelure3Act = new QAction(tr("5 pelure"), this->changeOgnionFrequencyActGrp);
+    this->pelure3Act->setCheckable(true);
+    this->pelure3Act->setChecked(true);
+    this->pelure3Act->setStatusTip("Changer nombre de pelures");
+    connect(this->pelure3Act, SIGNAL(triggered()), this, SLOT(changeOgnionFrequency3()));
+    this->pelure4Act = new QAction(tr("7 pelure"), this->changeOgnionFrequencyActGrp);
+    this->pelure4Act->setCheckable(true);
+    this->pelure4Act->setStatusTip("Changer nombre de pelures");
+    connect(this->pelure4Act, SIGNAL(triggered()), this, SLOT(changeOgnionFrequency4()));
+
+    this->drawingFrequencyActGrp = new QActionGroup(this);
+    this->drawingFrequency1Act = new QAction(tr("1 image sur 1"), this->drawingFrequencyActGrp);
+    this->drawingFrequency1Act->setCheckable(true);
+    this->drawingFrequency1Act->setChecked(true);
+    this->drawingFrequency1Act->setStatusTip("Changer la frequence d'image pour les pelures d'ognions");
+    connect(this->drawingFrequency1Act, SIGNAL(triggered()), this, SLOT(drawingFrequency1()));
+    this->drawingFrequency2Act = new QAction(tr("1 image sur 2"), this->drawingFrequencyActGrp);
+    this->drawingFrequency2Act->setCheckable(true);
+    this->drawingFrequency2Act->setStatusTip("Changer la frequence d'image pour les pelures d'ognions");
+    connect(this->drawingFrequency2Act, SIGNAL(triggered()), this, SLOT(drawingFrequency2()));
+    this->drawingFrequency3Act = new QAction(tr("1 image sur 3"), this->drawingFrequencyActGrp);
+    this->drawingFrequency3Act->setCheckable(true);
+    this->drawingFrequency3Act->setStatusTip("Changer la frequence d'image pour les pelures d'ognions");
+    connect(this->drawingFrequency3Act, SIGNAL(triggered()), this, SLOT(drawingFrequency3()));
 }
 
 void MainWindow::createDrawArea(){
@@ -295,6 +391,50 @@ void MainWindow::createTimeline(){
  * Slots
  *
  */
+
+void MainWindow::drawingFrequency1(){
+    this->drawingArea->frequenceDessin = 1;
+    this->drawingArea->update();
+}
+
+
+void MainWindow::drawingFrequency2(){
+    this->drawingArea->frequenceDessin = 2;
+    this->drawingArea->update();
+}
+
+
+void MainWindow::drawingFrequency3(){
+    this->drawingArea->frequenceDessin = 3;
+    this->drawingArea->update();
+}
+
+void MainWindow::changeOgnionFrequency1(){
+    this->drawingArea->nombrePelures = 2;
+    this->drawingArea->update();
+}
+
+
+void MainWindow::changeOgnionFrequency2(){
+    this->drawingArea->nombrePelures = 4;
+    this->drawingArea->update();
+}
+
+
+void MainWindow::changeOgnionFrequency3(){
+    this->drawingArea->nombrePelures = 6;
+    this->drawingArea->update();
+}
+
+
+void MainWindow::changeOgnionFrequency4(){
+    this->drawingArea->nombrePelures = 8;
+    this->drawingArea->update();
+}
+
+void MainWindow::clearPage(){
+    this->drawingArea->clearDessin();
+}
 
 void MainWindow::pauseVideo(){
     this->picturesArea->pause();
@@ -400,6 +540,9 @@ void MainWindow::newProject(){
 
 void MainWindow::createdProject(){
     this->fps = this->newProjectDialog->fps->currentData().toInt();
+
+    this->showLoadingView("Chargement de la video...");
+    this->update();
     QStringList command;
     command <<"-i"<<this->newProjectDialog->nomvideo->text()<<"-r"<< QString::number(this->fps)<<this->newProjectDialog->working_directory->path()+"/video_%4d.jpeg";
     qDebug()<<command;
@@ -411,12 +554,12 @@ void MainWindow::createdProject(){
     filters << "*.png" << "*.jpg" << "*.bmp"<<"*.jpeg";
     QFileInfoList fileInfoList = QDir(this->newProjectDialog->working_directory->path()).entryInfoList(filters, QDir::Files|QDir::NoDotAndDotDot);
     ClickableThumb * label;
+    this->showLoadingView("Creation de l'interface...");
     foreach(QFileInfo fi, fileInfoList){
         QImage temp(fi.absoluteFilePath());
         QImage pic(temp.scaled(640,480,Qt::KeepAspectRatio).size(),QImage::Format_ARGB32);
         pic.fill(Qt::transparent);
         pic.save(fi.absoluteFilePath()+".png");
-        //this->drawingArea->drawed_pictures.push_back(pic);
         this->drawingArea->paths.push_back(fi.absoluteFilePath());
         label = new ClickableThumb();
         label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -427,17 +570,7 @@ void MainWindow::createdProject(){
     this->picturesArea->draw();
     this->drawingArea->loadImage(0);
     this->showEditionView();
-
-
-    this->saveProjectAct->setEnabled(true);
-    this->saveAsProjectAct->setEnabled(true);
-    this->playVideoAct->setEnabled(true);
-    this->pauseVideoAct->setDisabled(true);
-    this->stopVideoAct->setEnabled(true);
-    this->toolsActGrp->setEnabled(true);
-    this->toggleBackgroundAct->setEnabled(true);
-    this->toggleOnionAct->setEnabled(true);
-    this->undoAct->setEnabled(true);
+    this->enableEditionActions(true);
 }
 
 void MainWindow::undo(){
@@ -449,7 +582,6 @@ void MainWindow::toggleOnion(bool b){
         this->drawingArea->nombrePelures = 5;
     else
         this->drawingArea->nombrePelures = 1;
-    qDebug()<<"Toggle ognons";
     this->drawingArea->repaint();
 }
 
@@ -467,8 +599,10 @@ void MainWindow::selectEraser(){
 }
 
 void MainWindow::openProject(){
+    this->showLoadingView("Creation interface");
     QString filename = QFileDialog::getExistingDirectory();
     if(filename.size()> 0){
+        this->showLoadingView("Creation interface");
         this->project_is_temporary = false;
         QStringList filters;
         filters <<"*.jpg" << "*.jpeg";
@@ -476,7 +610,6 @@ void MainWindow::openProject(){
         ClickableThumb * label;
         foreach(QFileInfo fi, fileInfoList){
             QImage temp(fi.absoluteFilePath());
-            //this->drawingArea->drawed_pictures.push_back(pic);
             this->drawingArea->paths.push_back(fi.absoluteFilePath());
             label = new ClickableThumb();
             label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -487,16 +620,9 @@ void MainWindow::openProject(){
         this->picturesArea->draw();
         this->drawingArea->loadImage(0);
         this->showEditionView();
-
-        this->saveProjectAct->setEnabled(true);
-        this->saveAsProjectAct->setEnabled(true);
-        this->playVideoAct->setEnabled(true);
-        this->pauseVideoAct->setDisabled(true);
-        this->stopVideoAct->setEnabled(true);
-        this->toolsActGrp->setEnabled(true);
-        this->toggleBackgroundAct->setEnabled(true);
-        this->toggleOnionAct->setEnabled(true);
-        this->undoAct->setEnabled(true);
+        this->enableEditionActions(true);
+    }else{
+        this->showHomeView();
     }
 }
 /*
@@ -508,6 +634,36 @@ void MainWindow::openProject(){
 
 void MainWindow::selectPicture(int i){
     this->picturesArea->selectPicture(i);
+}
+
+
+void MainWindow::enableEditionActions(bool b){
+    if(b){
+        this->saveProjectAct->setEnabled(true);
+        this->saveAsProjectAct->setEnabled(true);
+        this->playVideoAct->setEnabled(true);
+        this->pauseVideoAct->setDisabled(true);
+        this->stopVideoAct->setEnabled(true);
+        this->toolsActGrp->setEnabled(true);
+        this->changeOgnionFrequencyActGrp->setEnabled(true);
+        this->toggleBackgroundAct->setEnabled(true);
+        this->toggleOnionAct->setEnabled(true);
+        this->undoAct->setEnabled(true);
+        this->clearPageAct->setEnabled(true);
+    }else{
+        this->saveProjectAct->setDisabled(true);
+        this->saveAsProjectAct->setDisabled(true);
+        this->playVideoAct->setDisabled(true);
+        this->pauseVideoAct->setDisabled(true);
+        this->stopVideoAct->setDisabled(true);
+        this->toolsActGrp->setDisabled(true);
+        this->changeOgnionFrequencyActGrp->setDisabled(true);
+        this->toggleBackgroundAct->setDisabled(true);
+        this->toggleOnionAct->setDisabled(true);
+        this->undoAct->setDisabled(true);
+        this->clearPageAct->setDisabled(true);
+    }
+
 }
 
 /*

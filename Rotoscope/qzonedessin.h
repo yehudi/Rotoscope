@@ -17,6 +17,7 @@ public:
 
     bool afficherDecor;
     int nombrePelures;
+    int frequenceDessin;
 
     bool erase;
 
