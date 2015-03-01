@@ -30,6 +30,12 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui
 
 DISTFILES += \
+    ../Resources/MyIcons/png/arrow16.png \
+    ../Resources/MyIcons/png/arrow487.png \
+    ../Resources/MyIcons/png/arrowhead7.png \
+    ../Resources/MyIcons/png/pause52.png \
+    ../Resources/MyIcons/png/stop4.png \
+    ../Resources/MyIcons/png/three117.png \
     ../Resources/art-studio/artstudiopng/marker.png \
     ../Resources/art-studio/artstudiopng/bricks9.png \
     ../Resources/art-studio/artstudiopng/landscape14.png \

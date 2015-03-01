@@ -98,8 +98,12 @@ void QZoneDessin::mousePressEvent(QMouseEvent *event)
     m_position = new QPoint(event->pos() );
     m_actif = 1;
     QPainter paint(this->drawed_picture);
-    paint.setPen(this->pen);
+    paint.setBackgroundMode(Qt::TransparentMode);
+    QPen pen = this->pen;
     QPoint position(event->pos());
+    //if(erase)
+    //    pen.setColor(Qt::transparent);
+    paint.setPen(pen);
     if(erase)
         paint.eraseRect(position.rx(), position.ry(), position.rx()+this->pen.width(), position.ry()+this->pen.width());
     else
@@ -113,7 +117,10 @@ void QZoneDessin::mouseMoveEvent(QMouseEvent *event){
     {
         emit draw();
         QPainter paint(this->drawed_picture);
-        paint.setPen(this->pen);
+        QPen pen = this->pen;
+        if(erase)
+            pen.setColor(Qt::transparent);
+        paint.setPen(pen);
         QPoint position(event->pos());
         if(erase)
             paint.eraseRect(m_position->rx(), m_position->ry(), position.rx()+this->pen.width(), position.ry()+this->pen.width());

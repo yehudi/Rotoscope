@@ -17,14 +17,20 @@ public:
     void selectPicture(int);
     void draw();
 
+    int fps;
     QZoneDessin * zone_dessin;
 public slots:
     void clickedPickture(int);
     void nextPicture();
     void prevPicture();
+    void play();
+    void pause();
+    void stop();
+    void updatePlayer();
 signals:
     void askedPicture(int);
 private:
+    QTimer * playTimer;
     QScrollArea * area;
     QLayout * layout;
     QLayout * containerLayout;

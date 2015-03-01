@@ -17,6 +17,16 @@ MainWindow::MainWindow(QWidget *parent) :
     this->createViews();
     this->showHomeView();
 
+    this->saveProjectAct->setDisabled(true);
+    this->saveAsProjectAct->setDisabled(true);
+    this->playVideoAct->setDisabled(true);
+    this->pauseVideoAct->setDisabled(true);
+    this->stopVideoAct->setDisabled(true);
+    this->toolsActGrp->setDisabled(true);
+    this->toggleBackgroundAct->setDisabled(true);
+    this->toggleOnionAct->setDisabled(true);
+    this->undoAct->setDisabled(true);
+
 }
 
 /*
@@ -73,6 +83,15 @@ void MainWindow::createEditionView(){
 
     splitter->setChildrenCollapsible(true);
     splitter->addWidget(upArea);
+    this->playToolBar = new QToolBar;
+    this->playToolBar->addAction(this->playVideoAct);
+    this->playToolBar->addAction(this->pauseVideoAct);
+    this->playToolBar->addAction(this->stopVideoAct);
+    this->playToolBar->setIconSize(QSize(15,15));
+    this->playToolBar->setFixedHeight(20);
+    splitter->addWidget(this->playToolBar);
+    this->playToolBar->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
     splitter->addWidget(this->picturesArea);
     this->picturesArea->setSizePolicy(QSizePolicy::Preferred ,QSizePolicy::Fixed);
     /*QList<int> sizes;
@@ -80,14 +99,15 @@ void MainWindow::createEditionView(){
     sizes.push_back(300);
     splitter->setSizes(sizes);*/
     splitter->setStretchFactor(0,8);
-    splitter->setStretchFactor(1,2);
+    splitter->setStretchFactor(1,1);
+    splitter->setStretchFactor(2,2);
     panel->setMargin(40);
-    QPushButton * left = new QPushButton("<");
+    QPushButton * left = new QPushButton(QIcon("../Resources/MyIcons/png/arrowhead7.png"),"");
     left->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     left->setMaximumWidth(50);
     left->setMinimumWidth(20);
     connect(left, SIGNAL(pressed()), this->picturesArea, SLOT(prevPicture()));
-    QPushButton * right = new QPushButton(">");
+    QPushButton * right = new QPushButton(QIcon("../Resources/MyIcons/png/arrow487.png"), "");
     right->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     right->setMaximumWidth(50);
     right->setMinimumWidth(20);
@@ -176,12 +196,14 @@ void MainWindow::createToolbars(){
     this->viewToolBar->setIconSize(QSize(50,50));
     this->viewToolBar->addAction(this->toggleOnionAct);
     this->viewToolBar->addAction(this->toggleBackgroundAct);
+
 }
 
 void MainWindow::createMenus(){
     this->fileMenu = this->menuBar()->addMenu(tr("&Fichier"));
     this->fileMenu->addAction(this->newProjectAct);
     this->fileMenu->addAction(this->saveProjectAct);
+    this->fileMenu->addAction(this->saveAsProjectAct);
 
     this->editMenu = this->menuBar()->addMenu(tr("&Edition"));
     this->editMenu->addAction(this->selectPencilAct);
@@ -191,6 +213,9 @@ void MainWindow::createMenus(){
     this->editMenu->addAction(this->toggleBackgroundAct);
 
     this->viewMenu = this->menuBar()->addMenu(tr("&Previsualisation"));
+    this->viewMenu->addAction(this->playVideoAct);
+    this->viewMenu->addAction(this->pauseVideoAct);
+    this->viewMenu->addAction(this->stopVideoAct);
 }
 
 void MainWindow::createActions(){
@@ -208,15 +233,17 @@ void MainWindow::createActions(){
     this->saveProjectAct->setShortcut(QKeySequence(tr("Ctrl+S")));
     connect(this->saveProjectAct, SIGNAL(triggered()),this,SLOT(saveProject()));
 
+    this->saveAsProjectAct = new QAction(tr("&Sauvegarder sous..."),this);
+    this->saveAsProjectAct->setStatusTip("Sauvegarde du projet en cours dans un autre dossier");
+    this->saveAsProjectAct->setShortcut(QKeySequence(tr("Ctrl+Maj+S")));
+    connect(this->saveAsProjectAct, SIGNAL(triggered()),this,SLOT(saveAsProject()));
 
-    QIcon *pelicon = new QIcon("../Resources/art-studio/artstudiopng/sun1.png");
-    this->toggleOnionAct = new QAction(*pelicon, tr("&Afficher pelures"), this);
+    this->toggleOnionAct = new QAction(QIcon("../Resources/MyIcons/png/three117.png"), tr("&Afficher pelures"), this);
     this->toggleOnionAct->setCheckable(true);
     this->toggleOnionAct->setChecked(false);
     connect(this->toggleOnionAct, SIGNAL(toggled(bool)), this, SLOT(toggleOnion(bool)));
 
-    QIcon *backicon = new QIcon("../Resources/art-studio/artstudiopng/landscape14.png");
-    this->toggleBackgroundAct = new QAction(*backicon,tr("&Afficher fond"), this);
+    this->toggleBackgroundAct = new QAction(QIcon("../Resources/art-studio/artstudiopng/landscape14.png"),tr("&Afficher fond"), this);
     this->toggleBackgroundAct->setCheckable(true);
     this->toggleBackgroundAct->setChecked(true);
     connect(this->toggleBackgroundAct, SIGNAL(toggled(bool)), this, SLOT(toggleBackground(bool)));
@@ -224,18 +251,33 @@ void MainWindow::createActions(){
      * Tools
      */
     toolsActGrp = new QActionGroup(this);
-    QIcon *icon = new QIcon("../Resources/art-studio/artstudiopng/marker.png");
-    QIcon *gumicon = new QIcon("../Resources/art-studio/artstudiopng/bricks9.png");
-    this->selectPencilAct = new QAction(*icon, tr("&Pinceau"), toolsActGrp);
+    this->selectPencilAct = new QAction(QIcon("../Resources/art-studio/artstudiopng/marker.png"), tr("&Pinceau"), toolsActGrp);
     this->selectPencilAct->setStatusTip("Selectionner outil pinceau");
     this->selectPencilAct->setCheckable(true);
     this->selectPencilAct->setChecked(true);
     connect(this->selectPencilAct, SIGNAL(triggered()), this, SLOT(selectPencil()));
 
-    this->selectEraserAct = new QAction(*gumicon, tr("&Gomme"), toolsActGrp);
+    this->selectEraserAct = new QAction(QIcon("../Resources/art-studio/artstudiopng/bricks9.png"), tr("&Gomme"), toolsActGrp);
     this->selectEraserAct->setStatusTip("Selectionner outil gomme");
     this->selectEraserAct->setCheckable(true);
     connect(this->selectEraserAct, SIGNAL(triggered()), this, SLOT(selectEraser()));
+
+    this->playVideoAct = new QAction(QIcon("../Resources/MyIcons/png/arrow16.png"),tr("&play"), toolsActGrp);
+    this->playVideoAct->setStatusTip("Lancer la video");
+    connect(this->playVideoAct, SIGNAL(triggered()), this, SLOT(playVideo()));
+
+    this->pauseVideoAct = new QAction(QIcon("../Resources/MyIcons/png/pause52.png"),tr("&pause"), toolsActGrp);
+    this->pauseVideoAct->setStatusTip("Mettre la video en pause");
+    connect(this->pauseVideoAct, SIGNAL(triggered()), this, SLOT(pauseVideo()));
+
+
+    this->stopVideoAct = new QAction(QIcon("../Resources/MyIcons/png/stop4.png"),tr("&stop"), toolsActGrp);
+    this->stopVideoAct->setStatusTip("Arreter la video");
+    connect(this->stopVideoAct, SIGNAL(triggered()), this, SLOT(stopVideo()));
+
+    this->undoAct = new QAction(tr("&annuler"), toolsActGrp);
+    this->undoAct->setStatusTip("annuler dernière opération");
+    connect(this->undoAct, SIGNAL(triggered()), this, SLOT(undo()));
 
 }
 
@@ -254,6 +296,23 @@ void MainWindow::createTimeline(){
  *
  */
 
+void MainWindow::pauseVideo(){
+    this->picturesArea->pause();
+    this->playVideoAct->setEnabled(true);
+    this->pauseVideoAct->setDisabled(true);
+}
+
+void MainWindow::stopVideo(){
+    this->playVideoAct->setEnabled(true);
+    this->pauseVideoAct->setDisabled(true);
+    this->picturesArea->stop();
+}
+
+void MainWindow::playVideo(){
+    this->picturesArea->play();
+    this->playVideoAct->setDisabled(true);
+    this->pauseVideoAct->setEnabled(true);
+}
 
 void MainWindow::loadPicture(int i){
     this->drawingArea->loadImage(i);
@@ -312,6 +371,29 @@ void MainWindow::saveProject(){
     this->picturesArea->selectPicture(this->drawingArea->current_picture);
 }
 
+void MainWindow::saveAsProject(){
+    this->picturesArea->selectPicture(this->drawingArea->current_picture);
+    QString filename = QFileDialog::getSaveFileName(this, tr("Sauvegarder projet"), "/home/wolkom", tr("Dossiers"));
+    QDir dir;
+    if(filename.size()>0){
+        this->project_is_temporary = false;
+        if(dir.mkpath(filename)){
+           std::vector<QString> paths;
+           foreach(QString name,this->drawingArea->paths){
+               QFile f(name);
+               QFileInfo fileInfo(f.fileName());
+               QString filen(fileInfo.fileName());
+               QFile::copy(name, filename+"/"+filen);
+               paths.push_back(filename+"/"+filen);
+               QFile::copy(name+".png", filename+"/"+filen+".png");
+           }
+           this->drawingArea->paths = paths;
+           this->newProjectDialog->working_directory->remove();
+        }
+    }
+    this->picturesArea->selectPicture(this->drawingArea->current_picture);
+}
+
 void MainWindow::newProject(){
     this->newProjectDialog->show();
 }
@@ -319,7 +401,7 @@ void MainWindow::newProject(){
 void MainWindow::createdProject(){
     this->fps = this->newProjectDialog->fps->currentData().toInt();
     QStringList command;
-    command <<"-i"<<this->newProjectDialog->nomvideo->text()<<"-r"<< /*QString::number(this->fps)*/ "0.1"<<this->newProjectDialog->working_directory->path()+"/video_%4d.jpeg";
+    command <<"-i"<<this->newProjectDialog->nomvideo->text()<<"-r"<< QString::number(this->fps)<<this->newProjectDialog->working_directory->path()+"/video_%4d.jpeg";
     qDebug()<<command;
     QProcess process;
     process.setWorkingDirectory(this->newProjectDialog->working_directory->path());
@@ -345,6 +427,17 @@ void MainWindow::createdProject(){
     this->picturesArea->draw();
     this->drawingArea->loadImage(0);
     this->showEditionView();
+
+
+    this->saveProjectAct->setEnabled(true);
+    this->saveAsProjectAct->setEnabled(true);
+    this->playVideoAct->setEnabled(true);
+    this->pauseVideoAct->setDisabled(true);
+    this->stopVideoAct->setEnabled(true);
+    this->toolsActGrp->setEnabled(true);
+    this->toggleBackgroundAct->setEnabled(true);
+    this->toggleOnionAct->setEnabled(true);
+    this->undoAct->setEnabled(true);
 }
 
 void MainWindow::undo(){
@@ -394,6 +487,16 @@ void MainWindow::openProject(){
         this->picturesArea->draw();
         this->drawingArea->loadImage(0);
         this->showEditionView();
+
+        this->saveProjectAct->setEnabled(true);
+        this->saveAsProjectAct->setEnabled(true);
+        this->playVideoAct->setEnabled(true);
+        this->pauseVideoAct->setDisabled(true);
+        this->stopVideoAct->setEnabled(true);
+        this->toolsActGrp->setEnabled(true);
+        this->toggleBackgroundAct->setEnabled(true);
+        this->toggleOnionAct->setEnabled(true);
+        this->undoAct->setEnabled(true);
     }
 }
 /*

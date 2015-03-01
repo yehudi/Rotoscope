@@ -27,6 +27,7 @@ private:
 
     QToolBar *editToolBar;
     QToolBar *viewToolBar;
+    QToolBar *playToolBar;
 
     QWidget * homeView;
     QWidget * editionView;
@@ -44,6 +45,11 @@ private:
 
     QAction *newProjectAct;
     QAction *saveProjectAct;
+    QAction *saveAsProjectAct;
+    QAction *playVideoAct;
+    QAction *pauseVideoAct;
+    QAction *stopVideoAct;
+
 
     QActionGroup *toolsActGrp;
 
@@ -58,6 +64,7 @@ public slots:
     void createdProject();
     void openProject();
     void saveProject();
+    void saveAsProject();
     void undo();
     void toggleOnion(bool);
     void toggleBackground(bool);
@@ -66,6 +73,9 @@ public slots:
     void changeColor(QColor const &color);
     void changeToolSize(int);
     void loadPicture(int);
+    void playVideo();
+    void pauseVideo();
+    void stopVideo();
 
 public:
     explicit MainWindow(QWidget *parent = 0);
