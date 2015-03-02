@@ -20,6 +20,10 @@ class MainWindow : public QMainWindow
 private:
     int fps;
     bool project_is_temporary;
+
+    QString projectDirectory;
+    QString projectName;
+
     QMenu *fileMenu;
     QMenu *editMenu;
     QMenu *viewMenu;
@@ -46,12 +50,15 @@ private:
     int toolSize;
 
     QAction *newProjectAct;
+    QAction *openProjectAct;
     QAction *saveProjectAct;
     QAction *saveAsProjectAct;
     QAction *playVideoAct;
     QAction *pauseVideoAct;
     QAction *stopVideoAct;
     QAction *clearPageAct;
+    QAction *exportAct;
+    QAction *closeProjectAct;
 
     QActionGroup *changeOgnionFrequencyActGrp;
     QAction *pelure1Act;
@@ -71,6 +78,7 @@ private:
     QAction *toggleBackgroundAct;
     QAction *toggleOnionAct;
     QAction *undoAct;
+    QAction *exitAct;
 
     QLabel * loadingLabel;
     QLabel * loadingLabelText;
@@ -79,6 +87,7 @@ private:
     QApplication *app;
 
 public slots:
+    void closeProject();
     void newProject();
     void createdProject();
     void openProject();
@@ -93,6 +102,7 @@ public slots:
     void changeToolSize(int);
     void loadPicture(int);
     void playVideo();
+    void exportVideo();
     void pauseVideo();
     void stopVideo();
     void clearPage();
@@ -128,7 +138,8 @@ public:
 
 private:
     Ui::MainWindow *ui;
-
+    void loadProjectInfo(QString);
+    void saveProjectInfo();
     void enableEditionActions(bool);
 };
 

@@ -251,8 +251,12 @@ void MainWindow::createToolbars(){
 void MainWindow::createMenus(){
     this->fileMenu = this->menuBar()->addMenu(tr("&Fichier"));
     this->fileMenu->addAction(this->newProjectAct);
+    this->fileMenu->addAction(this->openProjectAct);
+    this->fileMenu->addAction(this->closeProjectAct);
     this->fileMenu->addAction(this->saveProjectAct);
     this->fileMenu->addAction(this->saveAsProjectAct);
+    this->fileMenu->addAction(this->exportAct);
+    this->fileMenu->addAction(this->exitAct);
 
     this->editMenu = this->menuBar()->addMenu(tr("&Edition"));
     this->editMenu->addAction(this->selectPencilAct);
@@ -288,6 +292,14 @@ void MainWindow::createActions(){
     this->newProjectAct->setStatusTip("Creation d'un nouveau projet");
     this->newProjectAct->setShortcut(QKeySequence(tr("Ctrl+N")));
     connect(this->newProjectAct, SIGNAL(triggered()),this,SLOT(newProject()));
+
+    this->openProjectAct = new QAction(tr("&Ouvrir Projet"),this);
+    this->openProjectAct->setStatusTip("Ouvrir projet existant");
+    connect(this->openProjectAct, SIGNAL(triggered()),this,SLOT(openProject()));
+
+    this->closeProjectAct = new QAction(tr("&Fermer projet"),this);
+    this->closeProjectAct->setStatusTip("Fermeture du projet");
+    connect(this->closeProjectAct, SIGNAL(triggered()),this,SLOT(closeProject()));
 
     this->saveProjectAct = new QAction(tr("&Sauvegarder"),this);
     this->saveProjectAct->setStatusTip("Sauvegarde du projet en cours");
@@ -330,6 +342,14 @@ void MainWindow::createActions(){
     this->pauseVideoAct = new QAction(QIcon("../Resources/MyIcons/png/pause52.png"),tr("&pause"), this);
     this->pauseVideoAct->setStatusTip("Mettre la video en pause");
     connect(this->pauseVideoAct, SIGNAL(triggered()), this, SLOT(pauseVideo()));
+
+    this->exportAct = new QAction(tr("&exporter"), this);
+    this->exportAct->setStatusTip("exporter la video");
+    connect(this->exportAct, SIGNAL(triggered()), this, SLOT(exportVideo()));
+
+    this->exitAct = new QAction(tr("&quitter"), this);
+    this->exitAct->setStatusTip("quitter l'application");
+    connect(this->exitAct, SIGNAL(triggered()), this, SLOT(close()));
 
 
     this->stopVideoAct = new QAction(QIcon("../Resources/MyIcons/png/stop4.png"),tr("&stop"), this);
@@ -393,6 +413,26 @@ void MainWindow::createTimeline(){
  * Slots
  *
  */
+
+void MainWindow::exportVideo(){
+    QString path = QFileDialog::getSaveFileName(this, tr("Exporter projet"), "/home/wolkom", tr("Video(*.mp4, *.avi)"));
+    if(path.size()>0){
+        QStringList list = path.split(".");
+        if(list.size() == 0 || (list[list.size()-1] != QString("avi") && list[list.size()-1] != QString("mp4"))){
+            path+=".mp4";
+        }
+        this->showLoadingView("Exportation vers "+path);
+        this->app->processEvents();
+        QStringList command;
+        command <<"-r"<<QString::number(this->fps)<<"-i"<<this->projectDirectory+"/video_%4d.jpeg.png"<<path;
+        QProcess process;
+        qDebug()<<command.join(" ");
+        process.setWorkingDirectory(this->projectDirectory);
+        process.start("avconv", command);
+        process.waitForFinished();
+        this->showEditionView();
+    }
+}
 
 void MainWindow::drawingFrequency1(){
     this->drawingArea->frequenceDessin = 1;
@@ -496,8 +536,10 @@ void MainWindow::saveProject(){
         if(filename.size()>0){
             this->project_is_temporary = false;
             if(dir.mkpath(filename)){
-               std::vector<QString> paths;
-               foreach(QString name,this->drawingArea->paths){
+                this->projectDirectory = filename;
+                this->saveProjectInfo();
+                std::vector<QString> paths;
+                foreach(QString name,this->drawingArea->paths){
                    QFile f(name);
                    QFileInfo fileInfo(f.fileName());
                    QString filen(fileInfo.fileName());
@@ -520,6 +562,8 @@ void MainWindow::saveAsProject(){
     if(filename.size()>0){
         this->project_is_temporary = false;
         if(dir.mkpath(filename)){
+           this->projectDirectory = filename;
+           this->saveProjectInfo();
            std::vector<QString> paths;
            foreach(QString name,this->drawingArea->paths){
                QFile f(name);
@@ -542,6 +586,7 @@ void MainWindow::newProject(){
 
 void MainWindow::createdProject(){
     this->fps = this->newProjectDialog->fps->currentData().toInt();
+    this->projectName = this->newProjectDialog->nom->text();
 
     this->showLoadingView("Chargement de la video...");
     this->app->processEvents();
@@ -603,10 +648,27 @@ void MainWindow::selectEraser(){
     this->drawingArea->erase = true;
 }
 
+void MainWindow::closeProject(){
+    this->project_is_temporary = true;
+    this->projectName = "";
+    this->projectDirectory = "";
+    this->enableEditionActions(false);
+    this->showHomeView();
+    this->app->processEvents();
+    this->drawingArea->paths = std::vector<QString>();
+    while(!this->picturesArea->thumbs.empty()){
+        ClickableThumb * th = this->picturesArea->thumbs[0];
+        this->picturesArea->thumbs.erase(this->picturesArea->thumbs.begin());
+        delete th;
+    }
+
+}
+
 void MainWindow::openProject(){
     QString filename = QFileDialog::getExistingDirectory();
     if(filename.size()> 0){
-        this->showLoadingView("Creation interface");
+        this->loadProjectInfo(filename);
+        this->showLoadingView("Chargement de "+this->projectName+"...");
         this->app->processEvents();
         this->loadingGif->start();
         this->project_is_temporary = false;
@@ -645,6 +707,9 @@ void MainWindow::selectPicture(int i){
 
 void MainWindow::enableEditionActions(bool b){
     if(b){
+        this->exportAct->setDisabled(false);
+        this->closeProjectAct->setDisabled(false);
+        this->openProjectAct->setEnabled(false);
         this->saveProjectAct->setEnabled(true);
         this->saveAsProjectAct->setEnabled(true);
         this->playVideoAct->setEnabled(true);
@@ -657,6 +722,9 @@ void MainWindow::enableEditionActions(bool b){
         this->undoAct->setEnabled(true);
         this->clearPageAct->setEnabled(true);
     }else{
+        this->closeProjectAct->setDisabled(true);
+        this->openProjectAct->setDisabled(false);
+        this->exportAct->setEnabled(false);
         this->saveProjectAct->setDisabled(true);
         this->saveAsProjectAct->setDisabled(true);
         this->playVideoAct->setDisabled(true);
@@ -670,6 +738,31 @@ void MainWindow::enableEditionActions(bool b){
         this->clearPageAct->setDisabled(true);
     }
 
+}
+
+
+void MainWindow::loadProjectInfo(QString directory){
+    QFile f(directory+"/.project.txt");
+    if (f.open(QFile::ReadOnly | QFile::Text)){
+        QTextStream in(&f);
+        QString info = in.readAll();
+        qDebug()<<info;
+        QStringList list = info.split("\t\n");
+        this->projectName = list[0];
+        this->projectDirectory = list[1];
+        this->fps = list[2].toInt();
+        f.close();
+    }
+}
+
+void MainWindow::saveProjectInfo(){
+    QStringList list;
+    list<<this->projectName<<this->projectDirectory<<QString::number(this->fps);
+    QFile f(this->projectDirectory+"/.project.txt");
+    if(f.open(QFile::WriteOnly)){
+        f.write(list.join("\t\n").toStdString().c_str());
+        f.close();
+    }
 }
 
 /*

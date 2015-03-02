@@ -101,6 +101,7 @@ void QZoneDessin::mousePressEvent(QMouseEvent *event)
     m_position = new QPoint(event->pos() );
     m_actif = 1;
     QPainter paint(this->drawed_picture);
+    paint.setRenderHint(QPainter::Antialiasing);
     paint.setBackgroundMode(Qt::TransparentMode);
     QPen pen = this->pen;
     QPoint position(event->pos());
@@ -118,6 +119,7 @@ void QZoneDessin::mouseMoveEvent(QMouseEvent *event){
     {
         emit draw();
         QPainter paint(this->drawed_picture);
+        paint.setRenderHint(QPainter::Antialiasing);
         QPen pen = this->pen;
         if(erase){
             pen.setColor(Qt::transparent);
