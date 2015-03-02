@@ -104,15 +104,13 @@ void QZoneDessin::mousePressEvent(QMouseEvent *event)
     paint.setBackgroundMode(Qt::TransparentMode);
     QPen pen = this->pen;
     QPoint position(event->pos());
-    //if(erase)
-    //    pen.setColor(Qt::transparent);
+    if(erase){
+        pen.setColor(Qt::transparent);
+        paint.setCompositionMode(QPainter::CompositionMode_DestinationOut);
+    }
     paint.setPen(pen);
-    if(erase)
-        paint.eraseRect(position.rx(), position.ry(), position.rx()+this->pen.width(), position.ry()+this->pen.width());
-    else
-        paint.drawPoint(QPointF(position));
+    paint.drawPoint(QPointF(position));
     this->update();
-    //std::cout << "press " << std::endl;
 }
 
 void QZoneDessin::mouseMoveEvent(QMouseEvent *event){
@@ -121,15 +119,13 @@ void QZoneDessin::mouseMoveEvent(QMouseEvent *event){
         emit draw();
         QPainter paint(this->drawed_picture);
         QPen pen = this->pen;
-        if(erase)
+        if(erase){
             pen.setColor(Qt::transparent);
+            paint.setCompositionMode(QPainter::CompositionMode_SourceOut);
+        }
         paint.setPen(pen);
         QPoint position(event->pos());
-        if(erase)
-            paint.eraseRect(m_position->rx(), m_position->ry(), position.rx()+this->pen.width(), position.ry()+this->pen.width());
-        else
-            paint.drawLine(QLine(*m_position,position));
-
+        paint.drawLine(QLine(*m_position,position));
         delete m_position;
         m_position = new QPoint(position);
         this->update();

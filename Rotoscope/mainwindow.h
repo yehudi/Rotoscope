@@ -76,6 +76,8 @@ private:
     QLabel * loadingLabelText;
     QMovie * loadingGif;
 
+    QApplication *app;
+
 public slots:
     void newProject();
     void createdProject();
@@ -105,7 +107,7 @@ public slots:
     void drawingFrequency3();
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QWidget *parent = 0, QApplication *ap = 0);
     void showHomeView();
     void showEditionView();
     void showLoadingView(QString);

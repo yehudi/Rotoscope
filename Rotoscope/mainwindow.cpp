@@ -8,9 +8,10 @@
 #include <QColorDialog>
 #include <QDebug>
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(QWidget *parent, QApplication * app) :
     QMainWindow(parent),
     ui(new Ui::MainWindow){
+    this->app = app;
     this->project_is_temporary = true;
     ui->setupUi(this);
     this->createViews();
@@ -154,10 +155,10 @@ void MainWindow::showHomeView(){
 
 void MainWindow::showLoadingView(QString message){
     qDebug()<<"Showing loading view";
-    this->loadingView->show();
-    this->loadingLabelText->setText(message);
-    this->loadingGif->start();
 
+    this->loadingGif->start();
+    this->loadingLabelText->setText(message);
+    this->loadingView->show();
     if (this->centralWidget())
         this->centralWidget()->setParent(0);
     this->setCentralWidget(this->loadingView);
@@ -169,6 +170,7 @@ void MainWindow::showLoadingView(QString message){
     foreach(QToolBar * tl, toolbars){
         tl->hide();
     }
+    this->loadingGif->start();
 }
 
 void MainWindow::showEditionView(){
@@ -542,7 +544,8 @@ void MainWindow::createdProject(){
     this->fps = this->newProjectDialog->fps->currentData().toInt();
 
     this->showLoadingView("Chargement de la video...");
-    this->update();
+    this->app->processEvents();
+    this->loadingGif->start();
     QStringList command;
     command <<"-i"<<this->newProjectDialog->nomvideo->text()<<"-r"<< QString::number(this->fps)<<this->newProjectDialog->working_directory->path()+"/video_%4d.jpeg";
     qDebug()<<command;
@@ -555,6 +558,8 @@ void MainWindow::createdProject(){
     QFileInfoList fileInfoList = QDir(this->newProjectDialog->working_directory->path()).entryInfoList(filters, QDir::Files|QDir::NoDotAndDotDot);
     ClickableThumb * label;
     this->showLoadingView("Creation de l'interface...");
+    this->app->processEvents();
+    this->loadingGif->start();
     foreach(QFileInfo fi, fileInfoList){
         QImage temp(fi.absoluteFilePath());
         QImage pic(temp.scaled(640,480,Qt::KeepAspectRatio).size(),QImage::Format_ARGB32);
@@ -599,10 +604,11 @@ void MainWindow::selectEraser(){
 }
 
 void MainWindow::openProject(){
-    this->showLoadingView("Creation interface");
     QString filename = QFileDialog::getExistingDirectory();
     if(filename.size()> 0){
         this->showLoadingView("Creation interface");
+        this->app->processEvents();
+        this->loadingGif->start();
         this->project_is_temporary = false;
         QStringList filters;
         filters <<"*.jpg" << "*.jpeg";
